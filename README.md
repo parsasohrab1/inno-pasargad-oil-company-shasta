@@ -1,1 +1,0 @@
-# inno-pasargad-oil-company-shasta
