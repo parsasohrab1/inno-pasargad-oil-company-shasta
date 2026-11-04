@@ -1,0 +1,31 @@
+# backend/app/schemas/prediction.py
+from pydantic import BaseModel, Field
+from typing import List, Optional
+from uuid import UUID
+from datetime import datetime
+
+class BitumenBaseProperties(BaseModel):
+    penetration: float = Field(..., gt=0, description="نفوذ قیر پایه (0.1 mm)")
+    softening_point: float = Field(..., gt=0, description="نقطه نرمی (°C)")
+    viscosity_135c: float = Field(..., gt=0, description="گرانروی در ۱۳۵°C (Pa.s)")
+
+class PolymerAdditive(BaseModel):
+    material_id: int
+    percentage: float = Field(..., ge=0, le=100)
+
+class BitumenPredictionRequest(BaseModel):
+    base_properties: BitumenBaseProperties
+    polymer: Optional[PolymerAdditive] = None
+    mixing_temperature: float = Field(..., description="دمای اختلاط (°C)")
+    mixing_time_minutes: float = Field(..., gt=0)
+
+class BitumenPredictionResponse(BaseModel):
+    penetration: float
+    softening_point: float
+    viscosity_135c: float
+    elastic_recovery: Optional[float]
+    pg_grade: Optional[str]
+    confidence_intervals: dict
+    required_tests: List[str]
+    prediction_id: UUID
+    model_version: str
