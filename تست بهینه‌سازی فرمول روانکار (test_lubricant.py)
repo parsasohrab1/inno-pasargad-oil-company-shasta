@@ -1,0 +1,21 @@
+# backend/tests/test_lubricant.py
+
+def test_optimize_lubricant_formulation(client):
+    payload = {
+        "target_viscosity": 10.5,
+        "target_vi": 95,
+        "pour_point_max": -30,
+        "base_oils": [
+            {"id": 1, "name": "Oil A", "cost_per_liter": 2.5, "available_liters": 10000},
+            {"id": 2, "name": "Oil B", "cost_per_liter": 3.0, "available_liters": 5000}
+        ],
+        "additives": [
+            {"id": 3, "name": "VI Improver", "cost_per_kg": 15, "max_percentage": 2.0}
+        ]
+    }
+    response = client.post("/api/v1/lubricant/optimize", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "formulation" in data
+    assert "estimated_cost" in data
+    assert data["estimated_cost"] > 0
