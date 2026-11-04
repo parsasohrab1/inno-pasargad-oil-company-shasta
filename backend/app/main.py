@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import threading
 from functools import lru_cache
@@ -10,15 +11,22 @@ from uuid import uuid4
 import joblib
 from fastapi import FastAPI, HTTPException
 
-from app.ml.bitumen import predict_with_bundle
+from app.ml.bitumen import predict_with_bundle, validate_model_bundle
+from app.ml.lubricant import optimize_lubricant, synthetic_catalog
 from app.schemas.prediction import (
     BitumenPredictionRequest,
     BitumenPredictionResponse,
     HealthResponse,
 )
+from app.schemas.lubricant import (
+    LubricantCatalogResponse,
+    LubricantOptimizationRequest,
+    LubricantOptimizationResponse,
+)
 
 app = FastAPI(title="BLFO Bitumen Prediction API", version="0.1.0")
 _audit_lock = threading.Lock()
+_logger = logging.getLogger(__name__)
 
 
 def _model_path() -> Path:
@@ -40,7 +48,28 @@ def _write_audit_record(record: dict) -> None:
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    return HealthResponse(status="ok", model_ready=_model_path().is_file())
+    model_path = _model_path()
+    if not model_path.is_file():
+        return HealthResponse(
+            status="ok",
+            model_ready=False,
+            model_error="No trained model artifact is available.",
+        )
+
+    try:
+        bundle = validate_model_bundle(_load_model(str(model_path.resolve())))
+    except Exception:
+        _logger.exception("The bitumen model artifact could not be loaded or validated.")
+        return HealthResponse(
+            status="ok",
+            model_ready=False,
+            model_error="The model artifact could not be loaded or is invalid.",
+        )
+    return HealthResponse(
+        status="ok",
+        model_ready=True,
+        model_version=bundle["model_version"],
+    )
 
 
 @app.post("/api/v1/bitumen/predict", response_model=BitumenPredictionResponse)
@@ -53,7 +82,7 @@ def predict_bitumen(request: BitumenPredictionRequest) -> BitumenPredictionRespo
         )
 
     try:
-        bundle = _load_model(str(model_path.resolve()))
+        bundle = validate_model_bundle(_load_model(str(model_path.resolve())))
         features = {
             "base_penetration": request.base_properties.penetration,
             "base_softening_point": request.base_properties.softening_point,
@@ -88,3 +117,28 @@ def predict_bitumen(request: BitumenPredictionRequest) -> BitumenPredictionRespo
         }
     )
     return response
+
+
+@app.get("/api/v1/lubricant/catalog", response_model=LubricantCatalogResponse)
+def lubricant_catalog() -> LubricantCatalogResponse:
+    return {
+        "data_source": "synthetic_demo",
+        "operational_use_allowed": False,
+        "components": synthetic_catalog(),
+        "warnings": [
+            "All catalog values are synthetic demonstration data, not measured product specifications."
+        ],
+    }
+
+
+@app.post(
+    "/api/v1/lubricant/optimize",
+    response_model=LubricantOptimizationResponse,
+)
+def optimize_lubricant_formulation(
+    request: LubricantOptimizationRequest,
+) -> LubricantOptimizationResponse:
+    try:
+        return optimize_lubricant(request.target_properties, request.batch_size_kg)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error

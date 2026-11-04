@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class BitumenBaseProperties(BaseModel):
@@ -32,6 +32,8 @@ class PredictionInterval(BaseModel):
 
 
 class BitumenPredictionResponse(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     penetration: float
     softening_point: float
     viscosity_135c: float
@@ -44,5 +46,9 @@ class BitumenPredictionResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     status: Literal["ok"]
     model_ready: bool
+    model_version: str | None = None
+    model_error: str | None = None

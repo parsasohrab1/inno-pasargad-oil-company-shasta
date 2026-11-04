@@ -94,21 +94,42 @@ def make_model() -> Any:
     return Pipeline([("preprocessing", preprocessing), ("model", estimator)])
 
 
-def predict_with_bundle(bundle: dict[str, Any], features: dict[str, Any]) -> dict[str, Any]:
+def validate_model_bundle(bundle: Any) -> dict[str, Any]:
+    if not isinstance(bundle, dict):
+        raise ValueError("The model artifact must contain a model bundle.")
+
     estimator = bundle.get("estimator")
     radii = bundle.get("interval_radii")
     version = bundle.get("model_version")
-    if estimator is None or not isinstance(radii, dict) or not version:
+    coverage = bundle.get("confidence_level")
+    if not callable(getattr(estimator, "predict", None)):
+        raise ValueError("The model artifact has no usable estimator.")
+    if not isinstance(radii, dict) or not isinstance(version, str) or not version.strip():
         raise ValueError("The model artifact is missing required model metadata.")
+    if not isinstance(coverage, (int, float)) or not np.isfinite(coverage) or not 0 < coverage < 1:
+        raise ValueError("The model artifact has an invalid confidence level.")
+    for column in TARGET_COLUMNS:
+        radius = radii.get(column)
+        if not isinstance(radius, (int, float)) or not np.isfinite(radius) or radius < 0:
+            raise ValueError(f"The model artifact has no valid interval for {column}.")
+    return bundle
 
-    prediction = estimator.predict(build_feature_frame(features))[0]
+
+def predict_with_bundle(bundle: dict[str, Any], features: dict[str, Any]) -> dict[str, Any]:
+    bundle = validate_model_bundle(bundle)
+    estimator = bundle["estimator"]
+    radii = bundle["interval_radii"]
+    version = bundle["model_version"]
+
+    predictions = np.asarray(estimator.predict(build_feature_frame(features)))
+    if predictions.shape != (1, len(TARGET_COLUMNS)) or not np.isfinite(predictions).all():
+        raise ValueError("The model returned invalid prediction values.")
+    prediction = predictions[0]
     outputs: dict[str, Any] = {}
     intervals: dict[str, dict[str, float]] = {}
     for column, value in zip(TARGET_COLUMNS, prediction, strict=True):
         name = TARGET_NAMES[column]
-        radius = radii.get(column)
-        if radius is None or radius < 0:
-            raise ValueError(f"The model artifact has no valid interval for {column}.")
+        radius = radii[column]
         outputs[name] = float(value)
         intervals[name] = {
             "lower": float(value - radius),

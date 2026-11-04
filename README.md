@@ -25,6 +25,9 @@ use. Predictions are decision support and do not replace laboratory testing.
 
 PG grade is returned as `null`: penetration, softening point, and viscosity
 alone are not sufficient to determine a standards-compliant performance grade.
+The lubricant optimizer is currently a non-operational demonstration using
+synthetic component properties and a simplified linear blending approximation.
+Its results must not be used for production or compliance decisions.
 
 ## Dataset format
 
@@ -74,9 +77,24 @@ Set `BLFO_MODEL_PATH` to use another model artifact and
 `artifacts/predictions.jsonl`.
 
 `POST /api/v1/bitumen/predict` accepts the base properties, polymer material
-and percentage, and mixing temperature, time, and speed. `GET /health` reports
-whether an artifact exists. Prediction requests return HTTP 503 when no trained
-artifact is available.
+and percentage, and mixing temperature, time, and speed. `GET /health` checks
+that the model artifact can be loaded and has valid prediction metadata; it
+returns the loaded model version or an explicit readiness error. Prediction
+requests return HTTP 503 when no trained artifact is available.
+
+## Lubricant optimizer demo
+
+`GET /api/v1/lubricant/catalog` shows a fixed synthetic component catalog.
+`POST /api/v1/lubricant/optimize` minimizes the demo cost subject to requested
+KV100, viscosity-index, pour-point, batch-size, and stock limits. The response
+includes `data_source: "synthetic_demo"`, `operational_use_allowed: false`, and
+warnings. This is only an API/optimization workflow prototype: the invented
+values and linear blending approximation are not validated lubricant science.
+Replace them with traceable laboratory measurements and validated blending
+rules before any operational use. The public
+[lubricant-formulation-dataset](https://github.com/iliana-vargas/lubricant-formulation-dataset)
+is a small reference catalog, not a verified formulation experiment dataset,
+so it is not used to train or calibrate this optimizer.
 
 ## Tests
 

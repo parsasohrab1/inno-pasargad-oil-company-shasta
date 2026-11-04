@@ -43,6 +43,59 @@ def test_predict_requires_trained_model(client):
     assert response.status_code == 503
 
 
+def test_health_reports_missing_model(client):
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "ok",
+        "model_ready": False,
+        "model_version": None,
+        "model_error": "No trained model artifact is available.",
+    }
+
+
+def test_health_reports_loaded_model_version(client, tmp_path, monkeypatch):
+    artifact = tmp_path / "model.joblib"
+    joblib.dump(
+        {
+            "estimator": FixedEstimator(),
+            "model_version": "test-model-v1",
+            "interval_radii": {
+                "output_penetration": 2,
+                "output_softening_point": 1,
+                "output_viscosity_135c": 0.05,
+                "output_elastic_recovery": 4,
+            },
+            "confidence_level": 0.95,
+        },
+        artifact,
+    )
+    monkeypatch.setenv("BLFO_MODEL_PATH", str(artifact))
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "ok",
+        "model_ready": True,
+        "model_version": "test-model-v1",
+        "model_error": None,
+    }
+
+
+def test_health_rejects_invalid_model_bundle(client, tmp_path, monkeypatch):
+    artifact = tmp_path / "model.joblib"
+    joblib.dump({"model_version": "incomplete"}, artifact)
+    monkeypatch.setenv("BLFO_MODEL_PATH", str(artifact))
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json()["model_ready"] is False
+    assert response.json()["model_error"] == "The model artifact could not be loaded or is invalid."
+
+
 def test_predict_returns_model_outputs_intervals_and_audit_log(client, tmp_path, monkeypatch):
     artifact = tmp_path / "model.joblib"
     joblib.dump(
