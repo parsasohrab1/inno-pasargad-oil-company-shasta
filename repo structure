@@ -1,0 +1,49 @@
+pasargad-blfo/
+├── README.md
+├── .gitignore
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── deploy.yml
+├── docs/
+│   ├── BRS.md
+│   └── SRS.md
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   ├── bitumen.py
+│   │   │   ├── lubricant.py
+│   │   │   └── production.py
+│   │   ├── schemas/
+│   │   │   ├── __init__.py
+│   │   │   └── prediction.py
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── prediction_service.py
+│   │   │   └── optimization_service.py
+│   │   └── api/
+│   │       ├── __init__.py
+│   │       └── v1/
+│   │           ├── __init__.py
+│   │           ├── bitumen.py
+│   │           ├── lubricant.py
+│   │           └── production.py
+│   ├── tests/
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   ├── test_bitumen.py
+│   │   └── test_lubricant.py
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── pyproject.toml
+├── frontend/  # (اختیاری: داشبورد React برای کارشناسان)
+│   └── ...
+├── infrastructure/
+│   ├── docker-compose.yml
+│   ├── init.sql
+│   └── prometheus.yml
+└── Makefile
