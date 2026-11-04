@@ -1,0 +1,30 @@
+# backend/tests/test_bitumen.py
+
+def test_predict_bitumen_properties(client):
+    payload = {
+        "base_properties": {
+            "penetration": 60,
+            "softening_point": 49,
+            "viscosity_135c": 0.3
+        },
+        "polymer": {"material_id": 1, "percentage": 3.5},
+        "mixing_temperature": 180,
+        "mixing_time_minutes": 120
+    }
+    response = client.post("/api/v1/bitumen/predict", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "penetration" in data
+    assert "softening_point" in data
+    assert "pg_grade" in data
+    assert "confidence_intervals" in data
+    assert data["prediction_id"] is not None
+
+def test_predict_bitumen_invalid_input(client):
+    payload = {
+        "base_properties": {"penetration": -5, "softening_point": 49, "viscosity_135c": 0.3},
+        "mixing_temperature": 180,
+        "mixing_time_minutes": 120
+    }
+    response = client.post("/api/v1/bitumen/predict", json=payload)
+    assert response.status_code == 422  # Validation error
