@@ -1,0 +1,54 @@
+-- infrastructure/init.sql
+
+-- فعال‌سازی افزونه TimescaleDB
+CREATE EXTENSION IF NOT EXISTS timescaledb;
+
+-- جدول مواد اولیه
+CREATE TABLE raw_materials (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(50) NOT NULL, -- 'bitumen_base', 'oil_base', 'polymer', 'additive'
+    batch_number VARCHAR(50) UNIQUE,
+    properties JSONB, -- خواص آزمون (نفوذ، ویسکوزیته و...)
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- جدول فرمول‌ها (نسخه‌بندی شده)
+CREATE TABLE formulations (
+    id SERIAL PRIMARY KEY,
+    product_type VARCHAR(50) NOT NULL, -- 'bitumen', 'lubricant'
+    target_grade VARCHAR(50), -- e.g., 'PG 64-22', 'SAE 10W-40'
+    components JSONB NOT NULL, -- آرایه‌ای از {material_id, percentage}
+    version INT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- جدول مخازن
+CREATE TABLE tanks (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    capacity_liters NUMERIC,
+    current_product_id INT REFERENCES formulations(id),
+    compatibility_matrix JSONB -- ماتریس سازگاری با سایر محصولات
+);
+
+-- جدول سری زمانی داده‌های برخط بلندینگ (Hypertable)
+CREATE TABLE blending_telemetry (
+    time TIMESTAMPTZ NOT NULL,
+    tank_id INT REFERENCES tanks(id),
+    temperature_c NUMERIC,
+    flow_rate_lpm NUMERIC,
+    pressure_bar NUMERIC
+);
+SELECT create_hypertable('blending_telemetry', 'time');
+
+-- جدول پیش‌بینی‌ها (برای ردیابی)
+CREATE TABLE predictions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    model_version VARCHAR(50) NOT NULL,
+    input_features JSONB NOT NULL,
+    predicted_properties JSONB NOT NULL,
+    confidence_interval JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
