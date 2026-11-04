@@ -1,0 +1,14 @@
+# Makefile
+.PHONY: up down test lint
+
+up:
+	docker-compose -f infrastructure/docker-compose.yml up -d
+
+down:
+	docker-compose -f infrastructure/docker-compose.yml down
+
+test:
+	cd backend && pytest --cov=app
+
+lint:
+	cd backend && ruff check app/ && ruff format --check app/
