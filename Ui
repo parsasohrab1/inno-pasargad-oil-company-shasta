@@ -1,0 +1,1822 @@
+# 🎨 UI حرفه‌ای و مدرن برای سامانه BLFO
+
+یک رابط کاربری **Dark-Glassmorphic RTL** با React + TypeScript + Tailwind + Recharts + Framer Motion که کاملاً به داشبورد صنعتی هوش مصنوعی شبیه است. ساختار به‌گونه‌ای طراحی شده که با کدهای بک‌اند شما هم‌راستا باشد و مستقیماً در مسیر `frontend/` قرار گیرد.
+
+---
+
+## 📁 ساختار پوشه Frontend
+
+```text
+frontend/
+├── package.json
+├── vite.config.ts
+├── tsconfig.json
+├── tailwind.config.js
+├── postcss.config.js
+├── index.html
+└── src/
+    ├── main.tsx
+    ├── App.tsx
+    ├── index.css
+    ├── lib/
+    │   ├── utils.ts
+    │   └── mock.ts
+    ├── components/
+    │   ├── ui/
+    │   │   ├── Button.tsx
+    │   │   ├── Card.tsx
+    │   │   ├── Input.tsx
+    │   │   ├── Badge.tsx
+    │   │   └── Progress.tsx
+    │   ├── Layout/
+    │   │   ├── Sidebar.tsx
+    │   │   └── Topbar.tsx
+    │   └── widgets/
+    │       ├── StatCard.tsx
+    │       ├── GaugeChart.tsx
+    │       └── PredictionChart.tsx
+    └── pages/
+        ├── Dashboard.tsx
+        ├── BitumenPrediction.tsx
+        ├── LubricantOptimization.tsx
+        ├── OnlineBlending.tsx
+        └── ProductionPlanning.tsx
+```
+
+---
+
+## ۱. `frontend/package.json`
+
+```json
+{
+  "name": "blfo-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext ts,tsx"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "lucide-react": "^0.454.0",
+    "recharts": "^2.12.7",
+    "framer-motion": "^11.11.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8"
+  }
+}
+```
+
+---
+
+## ۲. `frontend/vite.config.ts`
+
+```ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    proxy: {
+      '/api': { target: 'http://localhost:8000', changeOrigin: true }
+    }
+  }
+})
+```
+
+---
+
+## ۳. `frontend/tsconfig.json`
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] }
+  },
+  "include": ["src"]
+}
+```
+
+---
+
+## ۴. `frontend/tailwind.config.js`
+
+```js
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Vazirmatn', 'Inter', 'system-ui', 'sans-serif']
+      },
+      colors: {
+        bg: '#070b14',
+        surface: '#0f1524',
+        surface2: '#161d30',
+        border: 'rgba(148,163,184,0.12)',
+        gold: { DEFAULT: '#f5a524', dark: '#b8730a', light: '#ffd166' },
+        cyan: { DEFAULT: '#22d3ee', dark: '#0891b2' }
+      },
+      boxShadow: {
+        glow: '0 0 40px -10px rgba(245,165,36,0.45)',
+        'glow-cyan': '0 0 40px -10px rgba(34,211,238,0.45)',
+        glass: '0 8px 32px rgba(0,0,0,0.35)'
+      },
+      backgroundImage: {
+        'grid-glow':
+          'radial-gradient(circle at 20% 0%, rgba(245,165,36,0.12), transparent 45%), radial-gradient(circle at 80% 100%, rgba(34,211,238,0.10), transparent 45%)'
+      },
+      keyframes: {
+        'pulse-slow': {
+          '0%, 100%': { opacity: 0.4 },
+          '50%': { opacity: 0.9 }
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' }
+        }
+      },
+      animation: {
+        'pulse-slow': 'pulse-slow 4s ease-in-out infinite',
+        shimmer: 'shimmer 2.5s linear infinite'
+      }
+    }
+  },
+  plugins: []
+}
+```
+
+---
+
+## ۵. `frontend/postcss.config.js`
+
+```js
+export default { plugins: { tailwindcss: {}, autoprefixer: {} } }
+```
+
+---
+
+## ۶. `frontend/index.html`
+
+```html
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BLFO | سامانه هوشمند فرمولاسیون قیر و روانکار</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+---
+
+## ۷. `frontend/src/index.css`
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+
+html, body, #root { height: 100%; }
+
+body {
+  @apply bg-bg text-slate-200 font-sans antialiased;
+  background-image:
+    radial-gradient(circle at 15% -10%, rgba(245,165,36,0.10), transparent 40%),
+    radial-gradient(circle at 90% 110%, rgba(34,211,238,0.10), transparent 45%),
+    linear-gradient(180deg, #070b14 0%, #0a0f1c 100%);
+  background-attachment: fixed;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(245,165,36,0.35), rgba(34,211,238,0.35));
+  border-radius: 999px;
+}
+
+.glass {
+  @apply bg-surface/60 backdrop-blur-xl border border-white/[0.06] rounded-2xl;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.glass-strong {
+  @apply bg-surface2/70 backdrop-blur-2xl border border-white/[0.08] rounded-2xl;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.text-gradient-gold {
+  background: linear-gradient(90deg, #ffd166 0%, #f5a524 50%, #f97316 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-cyan {
+  background: linear-gradient(90deg, #67e8f9 0%, #22d3ee 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.grid-overlay {
+  background-image:
+    linear-gradient(rgba(148,163,184,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,163,184,0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+```
+
+---
+
+## ۸. `frontend/src/lib/utils.ts`
+
+```ts
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+export function faNum(n: number | string, digits = 1): string {
+  const v = typeof n === 'number' ? n.toFixed(digits) : n
+  const map: Record<string, string> = {
+    '0': '۰', '1': '۱', '2': '۲', '3': '۳', '4': '۴',
+    '5': '۵', '6': '۶', '7': '۷', '8': '۸', '9': '۹', '.': '٫'
+  }
+  return String(v).replace(/[0-9.]/g, (c) => map[c] ?? c)
+}
+
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+```
+
+---
+
+## ۹. `frontend/src/lib/mock.ts`
+
+```ts
+export const kpis = [
+  { key: 'accuracy', label: 'دقت پیش‌بینی مدل', value: 96.4, unit: '%', delta: '+1.8', trend: 'up' },
+  { key: 'cost', label: 'کاهش هزینه مواد', value: 7.2, unit: '%', delta: '+0.6', trend: 'up' },
+  { key: 'offspec', label: 'کاهش Off-spec', value: 32, unit: '%', delta: '+4.1', trend: 'up' },
+  { key: 'predictions', label: 'پیش‌بینی امروز', value: 148, unit: 'req', delta: '+12', trend: 'up' }
+]
+
+export const throughput = Array.from({ length: 24 }, (_, i) => ({
+  hour: `${i}:00`,
+  bitumen: 40 + Math.round(Math.sin(i / 2) * 15 + Math.random() * 10),
+  lubricant: 30 + Math.round(Math.cos(i / 3) * 12 + Math.random() * 8)
+}))
+
+export const qualityRadar = [
+  { subject: 'نفوذ', A: 92, B: 78 },
+  { subject: 'نقطه نرمی', A: 88, B: 74 },
+  { subject: 'گرانروی', A: 95, B: 81 },
+  { subject: 'بازگشت الاستیک', A: 90, B: 70 },
+  { subject: 'PG', A: 86, B: 72 },
+  { subject: 'پایداری', A: 94, B: 80 }
+]
+
+export const recentPredictions = [
+  { id: 'PG-64-22', type: 'قیر پلیمری', sp: 52.4, pen: 41, conf: 96, time: '۲ دقیقه پیش' },
+  { id: 'PG-70-22', type: 'قیر پلیمری', sp: 57.1, pen: 33, conf: 94, time: '۱۴ دقیقه پیش' },
+  { id: 'SAE 10W-40', type: 'روانکار', sp: 10.3, pen: 95, conf: 93, time: '۳۲ دقیقه پیش' },
+  { id: 'PG-58-28', type: 'قیر پلیمری', sp: 49.8, pen: 48, conf: 97, time: '۱ ساعت پیش' }
+]
+
+export const tanks = [
+  { id: 'T-01', product: 'PG 64-22', fill: 82, temp: 168, status: 'ok' },
+  { id: 'T-02', product: 'PG 70-22', fill: 64, temp: 172, status: 'ok' },
+  { id: 'T-03', product: 'SAE 10W-40', fill: 91, temp: 42, status: 'warn' },
+  { id: 'T-04', product: 'PG 58-28', fill: 23, temp: 155, status: 'ok' },
+  { id: 'T-05', product: 'Base Oil SN150', fill: 47, temp: 38, status: 'ok' },
+  { id: 'T-06', product: 'PG 76-22', fill: 5, temp: 178, status: 'danger' }
+]
+```
+
+---
+
+## ۱۰. `frontend/src/components/ui/Button.tsx`
+
+```tsx
+import { cn } from '@/lib/utils'
+import { ButtonHTMLAttributes, forwardRef } from 'react'
+
+type Variant = 'primary' | 'ghost' | 'outline' | 'cyan' | 'danger'
+type Size = 'sm' | 'md' | 'lg'
+
+interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: Variant
+  size?: Size
+}
+
+const variants: Record<Variant, string> = {
+  primary:
+    'bg-gradient-to-l from-gold-dark via-gold to-gold-light text-black font-semibold hover:shadow-glow hover:brightness-110',
+  cyan:
+    'bg-gradient-to-l from-cyan-dark via-cyan to-cyan-300 text-black font-semibold hover:shadow-glow-cyan hover:brightness-110',
+  ghost: 'bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]',
+  outline: 'border border-white/[0.12] text-slate-200 hover:bg-white/[0.05]',
+  danger: 'bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25'
+}
+
+const sizes: Record<Size, string> = {
+  sm: 'h-9 px-3 text-xs rounded-lg',
+  md: 'h-11 px-5 text-sm rounded-xl',
+  lg: 'h-12 px-6 text-base rounded-xl'
+}
+
+export const Button = forwardRef<HTMLButtonElement, Props>(
+  ({ className, variant = 'primary', size = 'md', ...props }, ref) => (
+    <button
+      ref={ref}
+      className={cn(
+        'inline-flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none',
+        variants[variant],
+        sizes[size],
+        className
+      )}
+      {...props}
+    />
+  )
+)
+Button.displayName = 'Button'
+```
+
+---
+
+## ۱۱. `frontend/src/components/ui/Card.tsx`
+
+```tsx
+import { cn } from '@/lib/utils'
+import { HTMLAttributes } from 'react'
+
+export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('glass p-5', className)} {...props} />
+}
+
+export function CardHeader({
+  title,
+  subtitle,
+  action,
+  icon
+}: {
+  title: string
+  subtitle?: string
+  action?: React.ReactNode
+  icon?: React.ReactNode
+}) {
+  return (
+    <div className="flex items-start justify-between mb-4">
+      <div className="flex items-center gap-3">
+        {icon && (
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold/20 to-cyan/10 border border-white/[0.06] flex items-center justify-center text-gold">
+            {icon}
+          </div>
+        )}
+        <div>
+          <h3 className="font-semibold text-slate-100">{title}</h3>
+          {subtitle && (
+            <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+          )}
+        </div>
+      </div>
+      {action}
+    </div>
+  )
+}
+```
+
+---
+
+## ۱۲. `frontend/src/components/ui/Input.tsx`
+
+```tsx
+import { cn } from '@/lib/utils'
+import { InputHTMLAttributes, forwardRef } from 'react'
+
+interface Props extends InputHTMLAttributes<HTMLInputElement> {
+  label?: string
+  unit?: string
+  hint?: string
+}
+
+export const Input = forwardRef<HTMLInputElement, Props>(
+  ({ label, unit, hint, className, ...props }, ref) => (
+    <div className="space-y-1.5">
+      {label && (
+        <label className="text-xs text-slate-400 font-medium">{label}</label>
+      )}
+      <div className="relative">
+        <input
+          ref={ref}
+          className={cn(
+            'w-full h-11 px-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-slate-100 placeholder:text-slate-600',
+            'focus:outline-none focus:border-gold/50 focus:bg-white/[0.05] focus:shadow-glow transition-all',
+            unit && 'pl-14',
+            className
+          )}
+          {...props}
+        />
+        {unit && (
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+            {unit}
+          </span>
+        )}
+      </div>
+      {hint && <p className="text-[11px] text-slate-600">{hint}</p>}
+    </div>
+  )
+)
+Input.displayName = 'Input'
+```
+
+---
+
+## ۱۳. `frontend/src/components/ui/Badge.tsx`
+
+```tsx
+import { cn } from '@/lib/utils'
+
+type Tone = 'gold' | 'cyan' | 'success' | 'warn' | 'danger' | 'neutral'
+
+const tones: Record<Tone, string> = {
+  gold: 'bg-gold/10 text-gold border-gold/30',
+  cyan: 'bg-cyan/10 text-cyan border-cyan/30',
+  success: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+  warn: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+  danger: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
+  neutral: 'bg-white/[0.04] text-slate-300 border-white/[0.08]'
+}
+
+export function Badge({
+  tone = 'neutral',
+  children,
+  className,
+  dot = false
+}: {
+  tone?: Tone
+  children: React.ReactNode
+  className?: string
+  dot?: boolean
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border',
+        tones[tone],
+        className
+      )}
+    >
+      {dot && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
+      {children}
+    </span>
+  )
+}
+```
+
+---
+
+## ۱۴. `frontend/src/components/ui/Progress.tsx`
+
+```tsx
+import { cn } from '@/lib/utils'
+
+export function Progress({
+  value,
+  tone = 'gold',
+  className
+}: {
+  value: number
+  tone?: 'gold' | 'cyan' | 'success' | 'warn' | 'danger'
+  className?: string
+}) {
+  const gradients: Record<string, string> = {
+    gold: 'from-gold-dark via-gold to-gold-light',
+    cyan: 'from-cyan-dark via-cyan to-cyan-300',
+    success: 'from-emerald-600 to-emerald-400',
+    warn: 'from-amber-600 to-amber-400',
+    danger: 'from-rose-600 to-rose-400'
+  }
+  return (
+    <div className={cn('h-2 w-full rounded-full bg-white/[0.06] overflow-hidden', className)}>
+      <div
+        className={cn('h-full rounded-full bg-gradient-to-l transition-all duration-700', gradients[tone])}
+        style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+      />
+    </div>
+  )
+}
+```
+
+---
+
+## ۱۵. `frontend/src/components/Layout/Sidebar.tsx`
+
+```tsx
+import { NavLink } from 'react-router-dom'
+import {
+  LayoutDashboard, FlaskConical, Droplets, Radio, Factory, Settings, Sparkles
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+const items = [
+  { to: '/', icon: LayoutDashboard, label: 'داشبورد', end: true },
+  { to: '/bitumen', icon: FlaskConical, label: 'پیش‌بینی قیر' },
+  { to: '/lubricant', icon: Droplets, label: 'فرمول روانکار' },
+  { to: '/blending', icon: Radio, label: 'بلندینگ برخط' },
+  { to: '/production', icon: Factory, label: 'برنامه‌ریزی تولید' }
+]
+
+export function Sidebar() {
+  return (
+    <aside className="w-64 shrink-0 h-screen sticky top-0 flex flex-col bg-surface/40 backdrop-blur-2xl border-l border-white/[0.06]">
+      {/* Logo */}
+      <div className="p-6 border-b border-white/[0.06]">
+        <div className="flex items-center gap-3">
+          <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-gold via-gold-dark to-black flex items-center justify-center shadow-glow">
+            <Sparkles className="w-5 h-5 text-black" />
+            <div className="absolute inset-0 rounded-2xl ring-1 ring-gold/40 animate-pulse-slow" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-gradient-gold">BLFO</div>
+            <div className="text-[10px] text-slate-500">Petropalaus AI</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
+          منوی اصلی
+        </div>
+        {items.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) =>
+              cn(
+                'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all',
+                isActive
+                  ? 'bg-gradient-to-l from-gold/15 to-transparent text-gold border border-gold/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.03]'
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <item.icon className={cn('w-4 h-4', isActive && 'text-gold')} />
+                <span className="font-medium">{item.label}</span>
+                {isActive && (
+                  <span className="mr-auto w-1.5 h-1.5 rounded-full bg-gold shadow-glow" />
+                )}
+              </>
+            )}
+          </NavLink>
+        ))}
+
+        <div className="px-3 pt-6 pb-1 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
+          تنظیمات
+        </div>
+        <NavLink
+          to="/settings"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-400 hover:text-slate-100 hover:bg-white/[0.03]"
+        >
+          <Settings className="w-4 h-4" />
+          تنظیمات
+        </NavLink>
+      </nav>
+
+      {/* Footer status */}
+      <div className="p-3 border-t border-white/[0.06]">
+        <div className="glass p-3 space-y-2">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-slate-300">مدل v2.4.1 فعال</span>
+          </div>
+          <div className="text-[10px] text-slate-500">
+            آخرین بازآموزی: ۱۴۰۵/۰۸/۰۲
+          </div>
+        </div>
+      </div>
+    </aside>
+  )
+}
+```
+
+---
+
+## ۱۶. `frontend/src/components/Layout/Topbar.tsx`
+
+```tsx
+import { Search, Bell, User, Zap } from 'lucide-react'
+import { Badge } from '@/components/ui/Badge'
+
+export function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <header className="sticky top-0 z-20 backdrop-blur-2xl bg-bg/60 border-b border-white/[0.06]">
+      <div className="flex items-center gap-4 px-6 h-16">
+        <div className="flex-1">
+          <h1 className="text-lg font-bold text-slate-100">{title}</h1>
+          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+        </div>
+
+        <div className="hidden md:flex items-center gap-2 h-10 px-3 rounded-xl bg-white/[0.03] border border-white/[0.08] w-72">
+          <Search className="w-4 h-4 text-slate-500" />
+          <input
+            placeholder="جستجو در گریدها، مخازن، فرمول‌ها..."
+            className="bg-transparent text-sm outline-none flex-1 placeholder:text-slate-600"
+          />
+          <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-500">
+            ⌘K
+          </kbd>
+        </div>
+
+        <Badge tone="success" dot>
+          AI Online
+        </Badge>
+
+        <button className="relative w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center hover:bg-white/[0.06] transition">
+          <Bell className="w-4 h-4 text-slate-300" />
+          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-gold" />
+        </button>
+
+        <div className="flex items-center gap-2 pl-2 pr-1 h-10 rounded-xl bg-white/[0.03] border border-white/[0.08]">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center">
+            <User className="w-4 h-4 text-black" />
+          </div>
+          <div className="hidden lg:block text-xs pl-1">
+            <div className="text-slate-200 font-medium">کارشناس آزمایشگاه</div>
+            <div className="text-slate-500 text-[10px]">نفت پاسارگاد</div>
+          </div>
+        </div>
+      </div>
+    </header>
+  )
+}
+```
+
+---
+
+## ۱۷. `frontend/src/components/widgets/StatCard.tsx`
+
+```tsx
+import { Card } from '@/components/ui/Card'
+import { ArrowUpRight, TrendingUp } from 'lucide-react'
+import { faNum } from '@/lib/utils'
+import { motion } from 'framer-motion'
+
+interface Props {
+  label: string
+  value: number
+  unit: string
+  delta: string
+  icon: React.ReactNode
+  tone?: 'gold' | 'cyan' | 'success' | 'warn'
+}
+
+const toneMap = {
+  gold: { ring: 'ring-gold/20', text: 'text-gold', bg: 'from-gold/20 to-transparent' },
+  cyan: { ring: 'ring-cyan/20', text: 'text-cyan', bg: 'from-cyan/20 to-transparent' },
+  success: { ring: 'ring-emerald-500/20', text: 'text-emerald-300', bg: 'from-emerald-500/20 to-transparent' },
+  warn: { ring: 'ring-amber-500/20', text: 'text-amber-300', bg: 'from-amber-500/20 to-transparent' }
+}
+
+export function StatCard({ label, value, unit, delta, icon, tone = 'gold' }: Props) {
+  const t = toneMap[tone]
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+    >
+      <Card className="relative overflow-hidden group hover:border-white/[0.12] transition">
+        <div className={`absolute -top-12 -left-12 w-40 h-40 rounded-full bg-gradient-to-br ${t.bg} blur-2xl opacity-60 group-hover:opacity-100 transition`} />
+        <div className="relative flex items-start justify-between">
+          <div>
+            <div className="text-xs text-slate-500 mb-2">{label}</div>
+            <div className="flex items-baseline gap-1.5">
+              <span className={`text-3xl font-extrabold ${t.text}`}>
+                {faNum(value, 1)}
+              </span>
+              <span className="text-xs text-slate-500">{unit}</span>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-[11px] text-emerald-400">
+              <TrendingUp className="w-3 h-3" />
+              <span>{delta}%</span>
+              <span className="text-slate-600">نسبت به هفته قبل</span>
+            </div>
+          </div>
+          <div className={`w-11 h-11 rounded-xl ring-1 ${t.ring} bg-white/[0.03] flex items-center justify-center ${t.text}`}>
+            {icon}
+          </div>
+        </div>
+        <ArrowUpRight className="absolute bottom-3 left-3 w-4 h-4 text-slate-700 group-hover:text-slate-500 transition" />
+      </Card>
+    </motion.div>
+  )
+}
+```
+
+---
+
+## ۱۸. `frontend/src/components/widgets/GaugeChart.tsx`
+
+```tsx
+import { motion } from 'framer-motion'
+
+export function GaugeChart({
+  value,
+  label,
+  tone = 'gold',
+  size = 140
+}: {
+  value: number
+  label: string
+  tone?: 'gold' | 'cyan'
+  size?: number
+}) {
+  const stroke = 12
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const pct = Math.min(100, Math.max(0, value)) / 100
+  const offset = c * (1 - pct)
+  const color = tone === 'gold' ? 'url(#gaugeGold)' : 'url(#gaugeCyan)'
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
+          <defs>
+            <linearGradient id="gaugeGold" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffd166" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+            <linearGradient id="gaugeCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="100%" stopColor="#0891b2" />
+            </linearGradient>
+          </defs>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            stroke="rgba(148,163,184,0.1)"
+            strokeWidth={stroke}
+            fill="none"
+          />
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            stroke={color}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={c}
+            initial={{ strokeDashoffset: c }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-2xl font-extrabold text-slate-100">
+            {value.toFixed(1)}%
+          </span>
+          <span className="text-[10px] text-slate-500">{label}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+---
+
+## ۱۹. `frontend/src/components/widgets/PredictionChart.tsx`
+
+```tsx
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend
+} from 'recharts'
+import { throughput } from '@/lib/mock'
+
+export function ThroughputChart() {
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <AreaChart data={throughput} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="gBitumen" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#f5a524" stopOpacity={0.5} />
+            <stop offset="95%" stopColor="#f5a524" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="gLubricant" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.5} />
+            <stop offset="95%" stopColor="#22d3ee" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid stroke="rgba(148,163,184,0.08)" vertical={false} />
+        <XAxis
+          dataKey="hour"
+          stroke="#64748b"
+          tick={{ fontSize: 11 }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis
+          stroke="#64748b"
+          tick={{ fontSize: 11 }}
+          axisLine={false}
+          tickLine={false}
+          orientation="right"
+        />
+        <Tooltip
+          contentStyle={{
+            background: 'rgba(15,21,36,0.95)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 12,
+            fontSize: 12,
+            direction: 'rtl'
+          }}
+        />
+        <Legend
+          wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+          iconType="circle"
+        />
+        <Area
+          type="monotone"
+          dataKey="bitumen"
+          name="تولید قیر"
+          stroke="#f5a524"
+          strokeWidth={2}
+          fill="url(#gBitumen)"
+        />
+        <Area
+          type="monotone"
+          dataKey="lubricant"
+          name="تولید روانکار"
+          stroke="#22d3ee"
+          strokeWidth={2}
+          fill="url(#gLubricant)"
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  )
+}
+```
+
+---
+
+## ۲۰. `frontend/src/pages/Dashboard.tsx`
+
+```tsx
+import { motion } from 'framer-motion'
+import { Activity, TrendingDown, DollarSign, Cpu, Sparkles, Boxes } from 'lucide-react'
+import { StatCard } from '@/components/widgets/StatCard'
+import { Card, CardHeader } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { Progress } from '@/components/ui/Progress'
+import { GaugeChart } from '@/components/widgets/GaugeChart'
+import { ThroughputChart } from '@/components/widgets/PredictionChart'
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip
+} from 'recharts'
+import { kpis, recentPredictions, tanks, qualityRadar } from '@/lib/mock'
+import { faNum } from '@/lib/utils'
+
+export default function Dashboard() {
+  return (
+    <div className="p-6 space-y-6">
+      {/* KPI row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard
+          label="دقت پیش‌بینی مدل"
+          value={96.4}
+          unit="%"
+          delta="+1.8"
+          icon={<Cpu className="w-5 h-5" />}
+          tone="gold"
+        />
+        <StatCard
+          label="کاهش هزینه مواد"
+          value={7.2}
+          unit="%"
+          delta="+0.6"
+          icon={<DollarSign className="w-5 h-5" />}
+          tone="cyan"
+        />
+        <StatCard
+          label="کاهش Off-spec"
+          value={32}
+          unit="%"
+          delta="+4.1"
+          icon={<TrendingDown className="w-5 h-5" />}
+          tone="success"
+        />
+        <StatCard
+          label="پیش‌بینی امروز"
+          value={148}
+          unit="req"
+          delta="+12"
+          icon={<Activity className="w-5 h-5" />}
+          tone="warn"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Throughput */}
+        <Card className="xl:col-span-2">
+          <CardHeader
+            icon={<Activity className="w-4 h-4" />}
+            title="روند تولید ۲۴ ساعته"
+            subtitle="قیر و روانکار — تن بر ساعت"
+            action={<Badge tone="success" dot>Live</Badge>}
+          />
+          <ThroughputChart />
+        </Card>
+
+        {/* Radar + Gauges */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader
+              icon={<Sparkles className="w-4 h-4" />}
+              title="کیفیت محصول"
+              subtitle="مقایسه مدل و آزمون واقعی"
+            />
+            <ResponsiveContainer width="100%" height={200}>
+              <RadarChart data={qualityRadar}>
+                <PolarGrid stroke="rgba(148,163,184,0.12)" />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  tick={{ fill: '#94a3b8', fontSize: 11 }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: 'rgba(15,21,36,0.95)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 12,
+                    fontSize: 12,
+                    direction: 'rtl'
+                  }}
+                />
+                <Radar name="مدل" dataKey="A" stroke="#f5a524" fill="#f5a524" fillOpacity={0.25} />
+                <Radar name="آزمون" dataKey="B" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.15} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          <Card>
+            <CardHeader title="وضعیت مدل‌ها" subtitle="پایش سلامت در لحظه" />
+            <div className="flex items-center justify-around">
+              <GaugeChart value={96.4} label="دقت کلی" tone="gold" />
+              <GaugeChart value={99.2} label="آپ‌تایم" tone="cyan" />
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Recent Predictions */}
+        <Card>
+          <CardHeader
+            icon={<Sparkles className="w-4 h-4" />}
+            title="آخرین پیش‌بینی‌ها"
+            subtitle="۴ درخواست اخیر"
+            action={<Badge tone="gold">Real-time</Badge>}
+          />
+          <div className="space-y-2">
+            {recentPredictions.map((p, i) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition"
+              >
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-gold/20 to-cyan/10 flex items-center justify-center text-gold">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-semibold text-slate-100">
+                      {p.id}
+                    </span>
+                    <Badge tone="cyan" className="text-[9px]">{p.type}</Badge>
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-0.5">
+                    نقطه نرمی {faNum(p.sp)}°C · نفوذ {faNum(p.pen)}
+                  </div>
+                </div>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-emerald-400">
+                    {faNum(p.conf)}%
+                  </div>
+                  <div className="text-[10px] text-slate-600">{p.time}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Tanks */}
+        <Card>
+          <CardHeader
+            icon={<Boxes className="w-4 h-4" />}
+            title="وضعیت مخازن"
+            subtitle="پرشدگی، دما و هشدارها"
+          />
+          <div className="space-y-3">
+            {tanks.map((t) => (
+              <div key={t.id} className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-slate-300">{t.id}</span>
+                    <span className="text-slate-500">·</span>
+                    <span className="text-slate-400">{t.product}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">{faNum(t.temp)}°C</span>
+                    <Badge
+                      tone={
+                        t.status === 'ok' ? 'success' : t.status === 'warn' ? 'warn' : 'danger'
+                      }
+                    >
+                      {faNum(t.fill)}%
+                    </Badge>
+                  </div>
+                </div>
+                <Progress
+                  value={t.fill}
+                  tone={
+                    t.status === 'ok' ? 'success' : t.status === 'warn' ? 'warn' : 'danger'
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  )
+}
+```
+
+---
+
+## ۲۱. `frontend/src/pages/BitumenPrediction.tsx`
+
+```tsx
+import { useState } from 'react'
+import { Sparkles, Beaker, Loader2, TrendingUp } from 'lucide-react'
+import { Card, CardHeader } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { faNum, sleep } from '@/lib/utils'
+import { motion } from 'framer-motion'
+
+interface Result {
+  penetration: number
+  softening_point: number
+  viscosity_135c: number
+  elastic_recovery: number
+  pg_grade: string
+  confidence: number
+  required_tests: string[]
+}
+
+export default function BitumenPrediction() {
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<Result | null>(null)
+  const [form, setForm] = useState({
+    penetration: '60',
+    softening_point: '49',
+    viscosity: '0.3',
+    polymer_pct: '3.5',
+    mixing_temp: '180',
+    mixing_time: '120'
+  })
+
+  const handlePredict = async () => {
+    setLoading(true)
+    await sleep(900)
+    setResult({
+      penetration: 41.2,
+      softening_point: 52.4,
+      viscosity_135c: 0.87,
+      elastic_recovery: 78.5,
+      pg_grade: 'PG 64-22',
+      confidence: 96,
+      required_tests: ['ASTM D5', 'ASTM D36', 'ASTM D4402', 'AASHTO T315']
+    })
+    setLoading(false)
+  }
+
+  return (
+    <div className="p-6 grid grid-cols-1 xl:grid-cols-5 gap-6">
+      {/* Form */}
+      <Card className="xl:col-span-2">
+        <CardHeader
+          icon={<Beaker className="w-4 h-4" />}
+          title="پارامترهای ورودی"
+          subtitle="خواص قیر پایه، پلیمر و شرایط اختلاط"
+        />
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="نفوذ قیر پایه" unit="0.1mm" value={form.penetration}
+              onChange={(e) => setForm({ ...form, penetration: e.target.value })} />
+            <Input label="نقطه نرمی" unit="°C" value={form.softening_point}
+              onChange={(e) => setForm({ ...form, softening_point: e.target.value })} />
+          </div>
+          <Input label="گرانروی در ۱۳۵°C" unit="Pa.s" value={form.viscosity}
+            onChange={(e) => setForm({ ...form, viscosity: e.target.value })} />
+          <Input label="درصد پلیمر" unit="%" value={form.polymer_pct}
+            onChange={(e) => setForm({ ...form, polymer_pct: e.target.value })} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="دمای اختلاط" unit="°C" value={form.mixing_temp}
+              onChange={(e) => setForm({ ...form, mixing_temp: e.target.value })} />
+            <Input label="زمان اختلاط" unit="min" value={form.mixing_time}
+              onChange={(e) => setForm({ ...form, mixing_time: e.target.value })} />
+          </div>
+          <Button onClick={handlePredict} disabled={loading} className="w-full" size="lg">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {loading ? 'در حال پیش‌بینی...' : 'اجرای پیش‌بینی'}
+          </Button>
+        </div>
+      </Card>
+
+      {/* Results */}
+      <div className="xl:col-span-3 space-y-6">
+        {!result && (
+          <Card className="flex flex-col items-center justify-center min-h-[400px] text-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gold/20 to-cyan/10 flex items-center justify-center mb-4">
+              <Sparkles className="w-8 h-8 text-gold" />
+            </div>
+            <h3 className="text-slate-200 font-semibold mb-1">آماده پیش‌بینی</h3>
+            <p className="text-xs text-slate-500 max-w-xs">
+              پارامترهای قیر پایه و شرایط اختلاط را وارد کنید تا مدل BLFO خواص نهایی را پیش‌بینی کند.
+            </p>
+          </Card>
+        )}
+
+        {result && (
+          <>
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+              <Card>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">گرید پیش‌بینی‌شده</div>
+                    <div className="text-4xl font-extrabold text-gradient-gold">
+                      {result.pg_grade}
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <Badge tone="success" dot>اعتماد {faNum(result.confidence)}%</Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: 'نفوذ', value: result.penetration, unit: '0.1mm' },
+                    { label: 'نقطه نرمی', value: result.softening_point, unit: '°C' },
+                    { label: 'گرانروی', value: result.viscosity_135c, unit: 'Pa.s' },
+                    { label: 'بازگشت الاستیک', value: result.elastic_recovery, unit: '%' }
+                  ].map((m) => (
+                    <div
+                      key={m.label}
+                      className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-gold/30 transition"
+                    >
+                      <div className="text-[10px] text-slate-500 mb-1">{m.label}</div>
+                      <div className="text-xl font-bold text-slate-100">
+                        {faNum(m.value)}
+                      </div>
+                      <div className="text-[10px] text-slate-600">{m.unit}</div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </motion.div>
+
+            <Card>
+              <CardHeader
+                icon={<TrendingUp className="w-4 h-4" />}
+                title="آزمون‌های تأییدی پیشنهادی"
+                subtitle="اجرای این آزمون‌ها برای تأیید خواص پیش‌بینی‌شده ضروری است"
+              />
+              <div className="flex flex-wrap gap-2">
+                {result.required_tests.map((t) => (
+                  <Badge key={t} tone="cyan">{t}</Badge>
+                ))}
+              </div>
+            </Card>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+```
+
+---
+
+## ۲۲. `frontend/src/pages/LubricantOptimization.tsx`
+
+```tsx
+import { useState } from 'react'
+import { Droplets, Sparkles, Loader2, DollarSign } from 'lucide-react'
+import { Card, CardHeader } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Progress } from '@/components/ui/Progress'
+import { faNum, sleep } from '@/lib/utils'
+
+interface Formulation {
+  name: string
+  percentage: number
+  cost: number
+}
+
+export default function LubricantOptimization() {
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<{ items: Formulation[]; total: number; vi: number; pour: number } | null>(null)
+  const [form, setForm] = useState({
+    target_viscosity: '10.5',
+    target_vi: '95',
+    pour_point: '-30'
+  })
+
+  const optimize = async () => {
+    setLoading(true)
+    await sleep(1000)
+    setResult({
+      items: [
+        { name: 'Oil SN150', percentage: 62, cost: 2.5 },
+        { name: 'Oil SN500', percentage: 28, cost: 3.1 },
+        { name: 'VI Improver', percentage: 1.8, cost: 15 },
+        { name: 'Pour Point Depressant', percentage: 0.4, cost: 22 }
+      ],
+      total: 2.87,
+      vi: 96,
+      pour: -33
+    })
+    setLoading(false)
+  }
+
+  return (
+    <div className="p-6 grid grid-cols-1 xl:grid-cols-5 gap-6">
+      <Card className="xl:col-span-2">
+        <CardHeader
+          icon={<Droplets className="w-4 h-4" />}
+          title="مشخصات هدف"
+          subtitle="گرانروی، شاخص گرانروی و نقطه ریزش"
+        />
+        <div className="space-y-4">
+          <Input label="گرانروی هدف" unit="cSt" value={form.target_viscosity}
+            onChange={(e) => setForm({ ...form, target_viscosity: e.target.value })} />
+          <Input label="شاخص گرانروی (VI)" unit="VI" value={form.target_vi}
+            onChange={(e) => setForm({ ...form, target_vi: e.target.value })} />
+          <Input label="حداکثر نقطه ریزش" unit="°C" value={form.pour_point}
+            onChange={(e) => setForm({ ...form, pour_point: e.target.value })} />
+          <Button onClick={optimize} disabled={loading} variant="cyan" className="w-full" size="lg">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {loading ? 'در حال بهینه‌سازی...' : 'بهینه‌سازی فرمول'}
+          </Button>
+        </div>
+      </Card>
+
+      <div className="xl:col-span-3">
+        {!result ? (
+          <Card className="flex flex-col items-center justify-center min-h-[400px] text-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan/20 to-cyan-dark/10 flex items-center justify-center mb-4">
+              <Droplets className="w-8 h-8 text-cyan" />
+            </div>
+            <h3 className="text-slate-200 font-semibold mb-1">آماده بهینه‌سازی</h3>
+            <p className="text-xs text-slate-500 max-w-xs">
+              مشخصات هدف را وارد کنید تا موتور بهینه‌سازی، فرمول با کمترین هزینه را پیشنهاد دهد.
+            </p>
+          </Card>
+        ) : (
+          <>
+            <Card className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="text-xs text-slate-500">هزینه برآوردی هر لیتر</div>
+                  <div className="text-3xl font-extrabold text-gradient-cyan">
+                    {faNum(result.total)} <span className="text-sm text-slate-500">$/L</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Badge tone="success">VI {faNum(result.vi)}</Badge>
+                  <Badge tone="cyan">Pour {faNum(result.pour)}°C</Badge>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {result.items.map((it) => (
+                  <div key={it.name}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-slate-300">{it.name}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-slate-500">{faNum(it.cost)} $/L</span>
+                        <span className="text-gold font-mono">{faNum(it.percentage)}%</span>
+                      </div>
+                    </div>
+                    <Progress value={it.percentage} tone="gold" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card>
+              <CardHeader
+                icon={<DollarSign className="w-4 h-4" />}
+                title="صرفه‌جویی پیشنهادی"
+                subtitle="در مقایسه با فرمول دستی"
+              />
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="text-[10px] text-emerald-300 mb-1">کاهش هزینه</div>
+                  <div className="text-xl font-bold text-emerald-300">7.2%</div>
+                </div>
+                <div className="p-3 rounded-xl bg-cyan/10 border border-cyan/20">
+                  <div className="text-[10px] text-cyan mb-1">کاهش آزمون</div>
+                  <div className="text-xl font-bold text-cyan">3.4x</div>
+                </div>
+                <div className="p-3 rounded-xl bg-gold/10 border border-gold/20">
+                  <div className="text-[10px] text-gold mb-1">پایداری کیفیت</div>
+                  <div className="text-xl font-bold text-gold">+18%</div>
+                </div>
+              </div>
+            </Card>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+```
+
+---
+
+## ۲۳. `frontend/src/pages/OnlineBlending.tsx`
+
+```tsx
+import { Radio, Activity, AlertTriangle, Thermometer, Gauge } from 'lucide-react'
+import { Card, CardHeader } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { Progress } from '@/components/ui/Progress'
+import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
+import { faNum } from '@/lib/utils'
+
+const realtime = Array.from({ length: 30 }, (_, i) => ({
+  t: i,
+  temp: 168 + Math.sin(i / 3) * 3 + Math.random() * 2,
+  flow: 42 + Math.cos(i / 4) * 4 + Math.random() * 1.5
+}))
+
+export default function OnlineBlending() {
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <Card className="relative overflow-hidden">
+        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-gradient-to-br from-gold/15 to-transparent blur-3xl" />
+        <div className="relative flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500/30 to-rose-500/5 flex items-center justify-center ring-1 ring-rose-500/30">
+              <Radio className="w-5 h-5 text-rose-300 animate-pulse" />
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">وضعیت بلندینگ</div>
+              <div className="text-lg font-bold text-slate-100">خط ۱ — فعال</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-6 flex-1 min-w-[300px]">
+            <div>
+              <div className="text-[10px] text-slate-500 mb-1">محصول جاری</div>
+              <div className="font-mono text-sm text-gold">PG 64-22</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-slate-500 mb-1">دبی خروجی</div>
+              <div className="text-sm text-slate-100">{faNum(42.3)} m³/h</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-slate-500 mb-1">پیشرفت سفارش</div>
+              <div className="text-sm text-slate-100">۴۸ از ۸۰ تن</div>
+            </div>
+          </div>
+          <Badge tone="success" dot>در محدوده مشخصات</Badge>
+        </div>
+      </Card>
+
+      {/* Live metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label: 'دمای مخزن', value: '۱۷۰٫۲', unit: '°C', icon: Thermometer, tone: 'warn' },
+          { label: 'دبی پمپ', value: '۴۲٫۳', unit: 'm³/h', icon: Gauge, tone: 'cyan' },
+          { label: 'انحراف پیش‌بینی', value: '۰٫۸', unit: 'σ', icon: AlertTriangle, tone: 'success' }
+        ].map((m) => (
+          <Card key={m.label} className="flex items-center gap-4">
+            <div
+              className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                m.tone === 'success'
+                  ? 'bg-emerald-500/10 text-emerald-300'
+                  : m.tone === 'warn'
+                  ? 'bg-amber-500/10 text-amber-300'
+                  : 'bg-cyan/10 text-cyan'
+              }`}
+            >
+              <m.icon className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">{m.label}</div>
+              <div className="text-2xl font-bold text-slate-100">
+                {m.value} <span className="text-xs text-slate-500">{m.unit}</span>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Chart */}
+      <Card>
+        <CardHeader
+          icon={<Activity className="w-4 h-4" />}
+          title="داده‌های برخط بلندینگ"
+          subtitle="دمای مخزن و دبی پمپ — ۳۰ ثانیه اخیر"
+          action={<Badge tone="danger" dot>Live</Badge>}
+        />
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={realtime}>
+            <CartesianGrid stroke="rgba(148,163,184,0.08)" vertical={false} />
+            <XAxis dataKey="t" stroke="#64748b" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+            <YAxis stroke="#64748b" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} orientation="right" />
+            <Tooltip
+              contentStyle={{
+                background: 'rgba(15,21,36,0.95)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 12,
+                fontSize: 12
+              }}
+            />
+            <Line type="monotone" dataKey="temp" name="دما (°C)" stroke="#f5a524" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="flow" name="دبی (m³/h)" stroke="#22d3ee" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </Card>
+
+      {/* Adjustment suggestion */}
+      <Card>
+        <CardHeader
+          icon={<AlertTriangle className="w-4 h-4" />}
+          title="پیشنهاد تنظیم اصلاحی"
+          subtitle="بر اساس محموله جدید مواد اولیه"
+        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            { label: 'نسبت پلیمر', from: 3.5, to: 3.62, tone: 'gold' as const },
+            { label: 'دمای اختلاط', from: 180, to: 178, tone: 'cyan' as const },
+            { label: 'زمان بلندینگ', from: 120, to: 135, tone: 'success' as const }
+          ].map((a) => (
+            <div key={a.label} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+              <div className="text-xs text-slate-500 mb-2">{a.label}</div>
+              <div className="flex items-center gap-3">
+                <span className="text-slate-400 text-sm line-through">{faNum(a.from)}</span>
+                <span className="text-slate-600">→</span>
+                <span className="text-lg font-bold text-slate-100">{faNum(a.to)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4">
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-slate-500">اطمینان پیشنهاد</span>
+            <span className="text-emerald-400 font-semibold">۹۲٪</span>
+          </div>
+          <Progress value={92} tone="success" />
+        </div>
+      </Card>
+    </div>
+  )
+}
+```
+
+---
+
+## ۲۴. `frontend/src/pages/ProductionPlanning.tsx`
+
+```tsx
+import { Factory, Calendar, AlertOctagon, Layers } from 'lucide-react'
+import { Card, CardHeader } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { faNum } from '@/lib/utils'
+
+const schedule = [
+  { id: 'ORD-201', grade: 'PG 64-22', start: '08:00', end: '11:30', tank: 'T-01', status: 'running' },
+  { id: 'ORD-202', grade: 'PG 70-22', start: '11:30', end: '14:00', tank: 'T-02', status: 'queued' },
+  { id: 'ORD-203', grade: 'SAE 10W-40', start: '14:00', end: '17:30', tank: 'T-03', status: 'queued' },
+  { id: 'ORD-204', grade: 'PG 58-28', start: '17:30', end: '20:00', tank: 'T-04', status: 'queued' }
+]
+
+const conflicts = [
+  { id: 'T-03', reason: 'آلودگی متقابل با محصول روانکار پایه معدنی', severity: 'high' },
+  { id: 'T-06', reason: 'حجم کمتر از حداقل سفارش', severity: 'medium' }
+]
+
+export default function ProductionPlanning() {
+  return (
+    <div className="p-6 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <div className="flex items-center gap-3">
+            <Calendar className="w-5 h-5 text-gold" />
+            <div>
+              <div className="text-xs text-slate-500">سفارشات امروز</div>
+              <div className="text-2xl font-bold text-slate-100">{faNum(12)}</div>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <Factory className="w-5 h-5 text-cyan" />
+            <div>
+              <div className="text-xs text-slate-500">ظرفیت آزاد</div>
+              <div className="text-2xl font-bold text-slate-100">{faNum(28)}٪</div>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <AlertOctagon className="w-5 h-5 text-rose-400" />
+            <div>
+              <div className="text-xs text-slate-500">تعارض‌های فعال</div>
+              <div className="text-2xl font-bold text-slate-100">{faNum(conflicts.length)}</div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader
+          icon={<Layers className="w-4 h-4" />}
+          title="توالی بهینه تولید"
+          subtitle="پیشنهاد الگوریتم — با رعایت ماتریس سازگاری"
+          action={<Badge tone="success">بهینه</Badge>}
+        />
+        <div className="space-y-3">
+          {schedule.map((s, i) => (
+            <div
+              key={s.id}
+              className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold/20 to-gold-dark/10 border border-gold/20 flex items-center justify-center font-bold text-gold text-sm">
+                {faNum(i + 1)}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs text-slate-400">{s.id}</span>
+                  <span className="font-semibold text-slate-100 text-sm">{s.grade}</span>
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  {s.start} — {s.end} · مخزن {s.tank}
+                </div>
+              </div>
+              <Badge tone={s.status === 'running' ? 'success' : 'neutral'} dot={s.status === 'running'}>
+                {s.status === 'running' ? 'در حال تولید' : 'در صف'}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          icon={<AlertOctagon className="w-4 h-4" />}
+          title="تعارض‌ها و هشدارها"
+          subtitle="تحلیل الگوریتم سازگاری"
+        />
+        <div className="space-y-3">
+          {conflicts.map((c) => (
+            <div
+              key={c.id}
+              className={`flex items-start gap-3 p-4 rounded-xl border ${
+                c.severity === 'high'
+                  ? 'bg-rose-500/10 border-rose-500/20'
+                  : 'bg-amber-500/10 border-amber-500/20'
+              }`}
+            >
+              <AlertOctagon
+                className={`w-5 h-5 shrink-0 ${
+                  c.severity === 'high' ? 'text-rose-400' : 'text-amber-400'
+                }`}
+              />
+              <div>
+                <div className="text-sm font-semibold text-slate-100">مخزن {c.id}</div>
+                <div className="text-xs text-slate-400 mt-1">{c.reason}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  )
+}
+```
+
+---
+
+## ۲۵. `frontend/src/App.tsx`
+
+```tsx
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { Sidebar } from '@/components/Layout/Sidebar'
+import { Topbar } from '@/components/Layout/Topbar'
+import Dashboard from '@/pages/Dashboard'
+import BitumenPrediction from '@/pages/BitumenPrediction'
+import LubricantOptimization from '@/pages/LubricantOptimization'
+import OnlineBlending from '@/pages/OnlineBlending'
+import ProductionPlanning from '@/pages/ProductionPlanning'
+
+const titles: Record<string, { title: string; subtitle: string }> = {
+  '/': { title: 'داشبورد', subtitle: 'نمای کلی از عملکرد مدل‌ها و وضعیت تولید' },
+  '/bitumen': { title: 'پیش‌بینی خواص قیر', subtitle: 'ماژول ۱ — پیش‌بینی خواص قیر و قیر پلیمری' },
+  '/lubricant': { title: 'بهینه‌سازی فرمول روانکار', subtitle: 'ماژول ۲ — طراحی و بهینه‌سازی فرمول' },
+  '/blending': { title: 'بلندینگ برخط', subtitle: 'ماژول ۳ — جبران تغییرات و اصلاح برخط' },
+  '/production': { title: 'برنامه‌ریزی تولید', subtitle: 'ماژول ۴ — مدیریت مخازن و کاهش بازکاری' }
+}
+
+function Shell() {
+  const loc = useLocation()
+  const meta = titles[loc.pathname] ?? titles['/']
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 min-w-0 flex flex-col">
+        <Topbar title={meta.title} subtitle={meta.subtitle} />
+        <main className="flex-1 grid-overlay">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/bitumen" element={<BitumenPrediction />} />
+            <Route path="/lubricant" element={<LubricantOptimization />} />
+            <Route path="/blending" element={<OnlineBlending />} />
+            <Route path="/production" element={<ProductionPlanning />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Shell />
+    </BrowserRouter>
+  )
+}
+```
+
+---
+
+## ۲۶. `frontend/src/main.tsx`
+
+```tsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
+```
+
+---
+
+## ۲۷. به‌روزرسانی `docker-compose.yml` برای Frontend
+
+فایل `infrastructure/docker-compose.yml` را با سرویس frontend تکمیل کنید:
+
+```yaml
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+```
+
+و فایل `frontend/Dockerfile`:
+
+```dockerfile
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+```
+
+`frontend/nginx.conf`:
+
+```nginx
+server {
+  listen 80;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location /api/ {
+    proxy_pass http://backend:8000/;
+    proxy_set_header Host $host;
+  }
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+}
+```
+
+---
+
+## ۲۸. افزودن مرحله build فرانت به CI/CD
+
+در `.github/workflows/ci.yml` یک Job جدید اضافه کنید:
+
+```yaml
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: |
+          cd frontend
+          npm ci
+          npm run build
+```
+
+---
+
+
